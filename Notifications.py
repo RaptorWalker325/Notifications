@@ -1,5 +1,7 @@
 from datetime import datetime
 from Lib import json
+from desktop_notifier import DesktopNotifier, Button, DEFAULT_SOUND
+import asyncio
 
 today = "22/05/2026" #datetime.today().strftime("%d/%m/%Y")
 today = datetime.strptime(today, "%d/%m/%Y")
@@ -9,6 +11,7 @@ class Notification:
         self.name = name
         self.date = date
 notifications = []
+notifier = DesktopNotifier(app_name="Notifications py")
 
 def add_notification(name, date):
     notification = Notification(name, date)
@@ -33,7 +36,8 @@ def edit_notification(index, name, date):
     notifications[index].date = date
     
 def delete_notification(index):
-    del notifications[index]        
+    del notifications[index]
+           
 #load from json file    
 with open('data.json', 'r') as file:
     data = json.load(file)
@@ -69,7 +73,21 @@ while menu != "0":
 print("Notifications expiring in the next 30 days:")
 for i in range(len(notifications)):
     calc = datetime.strptime(notifications[i].date, "%d/%m/%Y") - today
-    if  calc.days <= 30 and calc.days >= 0:print(f"{notifications[i].name}\n{notifications[i].date}\n")
+    if  calc.days <= 30 and calc.days >= 0:
+        print(f"{notifications[i].name}\n{notifications[i].date}\n")
+        async def main():
+            await notifier.send(
+                title="Expiring in 30 days",
+                message=f"{notifications[i].name} is expiring on {notifications[i].date}",
+                buttons=[
+                     Button(
+                title="Mark as read",
+                on_pressed=lambda: print("Marked as read"),
+                            )
+                ],
+                sound=DEFAULT_SOUND
+            )
+        asyncio.run(main())
 
 #write to json file
 with open('data.json', 'w') as file:
